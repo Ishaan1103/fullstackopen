@@ -13,10 +13,10 @@ const App = () => {
     .then(res => {
       setPersons(res)
     })
+    .catch(error =>{
+      alert(`cannot find data from server ${error}`)
+    })
   },[])
-  
-  
-  
   const filterPerson = persons.filter((person)=>
     person.name.toLowerCase().includes(searchPhone.toLowerCase())
   ); 
@@ -43,10 +43,9 @@ const App = () => {
           .then(res => {
             setPersons(persons.map(person => person.id !== nameExist.id ? person : res))
           })
-        }
-        else{
-          setNewName('')
-          setNewNum('')
+          .catch((err)=>{
+            alert(`old number is not able to update ${err}`);
+          })
         }
     }
     else{
@@ -60,6 +59,9 @@ const App = () => {
         setNewName('')
         setNewNum('')
       })
+      .catch((err)=>{
+        alert(`not able to create a element ${err}`)
+      })
     }
   }
   const deleteUserId =(id)=>{
@@ -68,6 +70,9 @@ const App = () => {
     .then(
       setPersons(persons.filter((person)=>person.id !== id))
     )
+    .catch((err)=>{
+      alert(`${err}`);
+    })
   }
   return(
     <div>
@@ -75,7 +80,6 @@ const App = () => {
       <Filter searchItem={searchItem}/>
       <h3>Add a new</h3>
       <PersonForm addName={addName}newName={newName} newNum={newNum} handleNumChange={handleNumChange} handleNameChange={handleNameChange}/>
-      
       <h2>Numbers</h2>
       {filterPerson.map((person)=> <div key={person.id}><Persons person={person} deleteUser={()=>deleteUserId(person.id)}/></div>)}
     </div>
