@@ -1,17 +1,22 @@
 import Filter from "./components/Filter.jsx"
 import PersonForm from "./components/PersonForm.jsx"
 import Persons from "./components/Persons.jsx"
-import{useState} from'react'
+import{useState,useEffect} from'react'
+import phoneService from './services/phonebook.js'
 const App = () => {
-  const[persons,setPersons]=useState([
-    { name: 'Arto Hellas', number: '040-123456', id: 1 },
-    { name: 'Ada Lovelace', number: '39-44-5323523', id: 2 },
-    { name: 'Dan Abramov', number: '12-43-234345', id: 3 },
-    { name: 'Mary Poppendieck', number: '39-23-6423122', id: 4 }
-  ])
+  const[persons,setPersons]=useState([])
   const [newName,setNewName]=useState('');
   const [newNum,setNewNum]=useState('')
   const [searchPhone,setSearchPhone]=useState('');
+  useEffect(()=>{
+    phoneService.getAll()
+    .then(res => {
+      setPersons(res)
+    })
+  },[])
+  
+  
+  
   const filterPerson = persons.filter((person)=>
     person.name.toLowerCase().includes(searchPhone.toLowerCase())
   ); 
@@ -27,19 +32,42 @@ const App = () => {
   const addName = (e) =>{ 
     e.preventDefault();
     const nameExist = persons.find((person)=>person.name === newName);
+    
     if(nameExist){
-      alert(`${nameExist.name} already exist in phonebook change name`)
+        if(window.confirm(`${nameExist.name} is already added to phonebook, replace the old number with the new one?`)){
+          const newObject = {
+            ...nameExist,
+            number: newNum
+          }
+          phoneService.update(nameExist,newObject)
+          .then(res => {
+            setPersons(persons.map(person => person.id !== nameExist.id ? person : res))
+          })
+        }
+        else{
+          setNewName('')
+          setNewNum('')
+        }
     }
     else{
       const addPerson = {
         name:newName,
-        number:newNum,
-        id:persons.length + 1,
+        number:newNum
       }
-      setPersons(persons.concat(addPerson))
-      setNewName('')
-      setNewNum('')
+      phoneService.create(addPerson)
+      .then((res)=>{
+        setPersons(persons.concat(res))
+        setNewName('')
+        setNewNum('')
+      })
     }
+  }
+  const deleteUserId =(id)=>{
+    const deleteUser = persons.find(person=>person.id === id)
+    phoneService.remove(deleteUser)
+    .then(
+      setPersons(persons.filter((person)=>person.id !== id))
+    )
   }
   return(
     <div>
@@ -49,8 +77,7 @@ const App = () => {
       <PersonForm addName={addName}newName={newName} newNum={newNum} handleNumChange={handleNumChange} handleNameChange={handleNameChange}/>
       
       <h2>Numbers</h2>
-      <Persons filterPerson={filterPerson}/>
-      
+      {filterPerson.map((person)=> <div key={person.id}><Persons person={person} deleteUser={()=>deleteUserId(person.id)}/></div>)}
     </div>
   )
 }

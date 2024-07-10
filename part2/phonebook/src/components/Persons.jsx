@@ -1,8 +1,8 @@
 const Persons = (props) =>{
-    const {filterPerson} = props;
+    const {person, deleteUser} = props;
     return(
         <div>
-            {filterPerson.map((person)=> <div key={person.id}>{person.name} {person.number}</div>)}
+            {person.name} {person.number} <button onClick={deleteUser}>delete</button>
         </div>
     )
 }
