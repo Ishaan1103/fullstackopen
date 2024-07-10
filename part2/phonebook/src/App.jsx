@@ -17,6 +17,9 @@ const App = () => {
       alert(`cannot find data from server ${error}`)
     })
   },[])
+  
+  
+  
   const filterPerson = persons.filter((person)=>
     person.name.toLowerCase().includes(searchPhone.toLowerCase())
   ); 
@@ -71,7 +74,7 @@ const App = () => {
       setPersons(persons.filter((person)=>person.id !== id))
     )
     .catch((err)=>{
-      alert(`${err}`);
+      alert(`cannot delete user${err}`);
     })
   }
   return(
