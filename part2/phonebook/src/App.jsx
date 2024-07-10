@@ -3,18 +3,26 @@ import PersonForm from "./components/PersonForm.jsx"
 import Persons from "./components/Persons.jsx"
 import{useState,useEffect} from'react'
 import phoneService from './services/phonebook.js'
+import Notification from "./components/Notification.jsx"
 const App = () => {
   const[persons,setPersons]=useState([])
   const [newName,setNewName]=useState('');
   const [newNum,setNewNum]=useState('')
   const [searchPhone,setSearchPhone]=useState('');
+  const [errMessage,setErrMessage] = useState(null)
+
   useEffect(()=>{
     phoneService.getAll()
     .then(res => {
       setPersons(res)
     })
     .catch(error =>{
-      alert(`cannot find data from server ${error}`)
+      setErrMessage(
+        `Cannot get Numbers from server ${error}`
+      )
+      setTimeout(() => {
+        setErrMessage(null)
+      }, 5000);
     })
   },[])
   
@@ -45,10 +53,21 @@ const App = () => {
           phoneService.update(nameExist,newObject)
           .then(res => {
             setPersons(persons.map(person => person.id !== nameExist.id ? person : res))
+            setErrMessage(`${nameExist.name} number has been changed`)
+            setTimeout(() => {
+              setErrMessage(null)
+            }, 5000);
           })
-          .catch((err)=>{
-            alert(`old number is not able to update ${err}`);
+          
+          .catch(()=>{
+            setErrMessage(`${nameExist.name} do not exist in the list it may be already deleted!`)
+            setTimeout(() => {
+              setErrMessage(null)
+            }, 5000);
+            setPersons(persons.filter(person=> person.id !== nameExist.id ))
           })
+          setNewName('')
+          setNewNum('')
         }
     }
     else{
@@ -61,9 +80,20 @@ const App = () => {
         setPersons(persons.concat(res))
         setNewName('')
         setNewNum('')
+        setErrMessage(
+          `${res.name} has been added`
+        )
+        setTimeout(() => {
+          setErrMessage(null)
+        }, 5000);
       })
       .catch((err)=>{
-        alert(`not able to create a element ${err}`)
+        setErrMessage(
+          'Cannot add Person in list ',err
+        )
+        setTimeout(() => {
+          setErrMessage(null)
+        }, 5000);
       })
     }
   }
@@ -76,10 +106,15 @@ const App = () => {
     .catch((err)=>{
       alert(`cannot delete user${err}`);
     })
+    setErrMessage(`removed ${deleteUser.name} `)
+    setTimeout(() => {
+      setErrMessage(null)
+    }, 5000);
   }
   return(
     <div>
       <h2>Phonebook</h2>
+      <Notification message={errMessage}/>
       <Filter searchItem={searchItem}/>
       <h3>Add a new</h3>
       <PersonForm addName={addName}newName={newName} newNum={newNum} handleNumChange={handleNumChange} handleNameChange={handleNameChange}/>
