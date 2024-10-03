@@ -1,28 +1,45 @@
-import { NewPatientEntry, Gender } from "./types";
+import { z } from "zod";
+import { NewPatientEntry, Gender, HealthCheckEntrySchema } from "./types";
 
-const toNewPatientEntry = (object:unknown):NewPatientEntry =>{
-    if (!object || typeof object !== 'object') {
-        throw new Error('Incorrect or missing data')
-    }
-    if ('name' in object && 'dateOfBirth' in object && 'ssn' in object && 'gender' in object && 'occupation' in object) {
-        const newEntry: NewPatientEntry = {
-            name: parseName(object.name),
-            dateOfBirth: parseDate(object.dateOfBirth),
-            ssn: parseSsn(object.ssn),
-            gender: parseGender(object.gender),
-            occupation: parseOccupation(object.occupation)
-        }
-        return newEntry
-    }
-    throw new Error('Incorrect data: some fields are missing');
+export const toNewPatientEntry = (object:unknown):NewPatientEntry =>{
+        return NewEntrySchema.parse(object)
 }
+const EntrySchema = z.union([
+    HealthCheckEntrySchema,
+    HospitalEntrySchema,
+    OccupationalHealthcareEntrySchema
+  ]);
+export const NewEntrySchema = z.object({
+        name: z.string(),
+        dateOfBirth: z.string().date(),
+        ssn: z.string(),
+        gender: z.nativeEnum(Gender),
+        occupation: z.string(),
+        entries:z.array(EntrySchema).default([])
+    })
 
+    const HospitalEntrySchema = BaseEntrySchema.extend({
+        type: z.literal("Hospital"),
+        discharge: z.object({
+          date: z.string().date(),
+          criteria: z.string()
+        })
+      });
+      
+      const OccupationalHealthcareEntrySchema = BaseEntrySchema.extend({
+        type: z.literal("OccupationalHealthcare"),
+        employerName: z.string(),
+        sickLeave: z
+          .object({
+            startDate: z.string().date(),
+            endDate: z.string().date()
+          })
+          .optional()
+      });
 
+/*
 const parseName = (name:unknown):string =>{
-    if (!name || !isString(name)) {
-        throw new Error('Incorrect or missing name')
-    }
-    return name
+    return z.string().parse(name)
 }
 const parseOccupation = (occupation:unknown):string =>{
     if (!occupation || !isString(occupation)) {
@@ -63,5 +80,5 @@ const isDate = (date:string):boolean =>{
 const isString = (text:unknown):text is string =>{
     return typeof text === 'string' || text instanceof String
 }
-
+*/
 export default toNewPatientEntry
